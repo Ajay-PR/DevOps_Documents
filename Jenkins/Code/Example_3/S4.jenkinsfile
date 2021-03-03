@@ -1,0 +1,41 @@
+pipeline {
+	agent any
+		stages {
+			stage("Prepare Inventory") {
+				steps {
+					script {
+						sh '''
+						echo "Preparing ansible inventory file"
+						sudo rm -f /etc/ansible/hosts
+						sudo touch /etc/ansible/hosts
+						sudo chmod 666 /etc/ansible/hosts
+						'''
+					}
+				}
+			}
+
+			stage("Terraform") {
+				steps {
+					script {
+						sh '''
+						echo "Creating instance"
+						cd /data/devops/Jenkins-workspace/Example_3/ec2_creation && /usr/local/bin/terraform apply -auto-approve && /usr/local/bin/terraform output public_ip >> /etc/ansible/hosts
+						'''
+						}
+					}
+				}
+
+			stage("Ansible") {
+				steps {
+					script {
+						sh '''
+						echo "Executing playbook"
+						sleep 120
+						sudo /usr/local/bin/ansible-playbook /data/devops/Jenkins-workspace/Example_3/playbook/apache.yml --key-file "/data/devops/Jenkins-workspace/Example_3/terraform.pem"
+						'''
+						}
+					}
+				}
+			}
+		}
+			
