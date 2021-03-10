@@ -5,7 +5,7 @@ provider "aws" {
 resource "aws_instance" "ec2_instance" {
     ami = "ami-052c08d70def0ac62"
     instance_type = "t2.micro"
-    vpc_security_group_ids = ["sg-0a254ce4223288a2a"]
+    vpc_security_group_ids = ["sg-xxx"]
     tags = {Name = "HTTP_SERVER"}
     key_name = "terraform"
 }
