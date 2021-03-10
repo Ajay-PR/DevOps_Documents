@@ -1,0 +1,59 @@
+pipeline {
+	agent any
+		stages {
+
+			stage("Prepare Inventory") {
+				steps {
+					script {
+						sh '''
+						echo "Preparing ansible inventory file"
+						sudo rm -f /etc/ansible/hosts
+						sudo touch /etc/ansible/hosts
+						sudo chmod 666 /etc/ansible/hosts
+						'''
+						}
+					}
+				}
+
+			stage("Code Build") {
+				steps {
+					script {
+						sh '''
+						echo "Build java artifact"
+						cd java-program && sudo /usr/bin/mvn clean && sudo /usr/bin/mvn package
+						'''
+						}
+					}
+				}
+				
+
+			stage("Instance Build") {
+                steps {
+                    script {
+                        sh '''
+                        echo "Creating instance"
+                        cd ec2_creation && /usr/local/bin/terraform init && /usr/local/bin/terraform apply -auto-approve && /usr/local/bin/terraform output public_ip >> /etc/ansible/hosts
+                        '''
+                        }
+                    }
+                }
+
+            stage("Jar file copy") {
+                steps {
+                    script {
+                        sh '''
+                        echo "Executing playbook"
+                        sleep 120
+                        cd playbook && sudo /usr/local/bin/ansible-playbook jar.yml --key-file "terraform.pem"
+                        '''
+                        }
+                    }
+                }
+            }
+        }
+        
+
+		
+
+			
+	
